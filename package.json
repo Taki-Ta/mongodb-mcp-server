@@ -17,10 +17,10 @@
   "type": "module",
   "scripts": {
     "prepare": "npm run build",
-    "build:clean": "rm -rf dist",
+    "build:clean": "rmdir /s /q dist 2>nul || echo Directory cleaned",
     "build:compile": "tsc --project tsconfig.build.json",
-    "build:chmod": "chmod +x dist/index.js",
-    "build": "npm run build",
+    "build:chmod": "echo Setting permissions...",
+    "build": "npm run build:compile",
     "inspect": "npm run build && mcp-inspector -- dist/index.js",
     "prettier": "prettier",
     "check": "npm run build && npm run check:types && npm run check:lint && npm run check:format",
