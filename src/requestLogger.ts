@@ -81,10 +81,19 @@ export class RequestLogger {
         const entry: ResponseLogEntry = {
             timestamp: new Date().toISOString(),
             requestId,
-            ...(responseData && { responseData: this.sanitizeBody(responseData) }),
-            ...(error && { error }),
-            ...(executionTimeMs !== undefined && { executionTimeMs }),
         };
+
+        if (responseData) {
+            entry.responseData = this.sanitizeBody(responseData);
+        }
+        
+        if (error) {
+            entry.error = error;
+        }
+        
+        if (executionTimeMs !== undefined) {
+            entry.executionTimeMs = executionTimeMs;
+        }
 
         await this.logResponseEntry(entry);
     }
@@ -222,9 +231,9 @@ export class RequestLogger {
                     await fs.unlink(filePath);
                 }
             }
-        } catch (error) {
+        } catch (error: any) {
             // 目录可能不存在，静默处理
-            if (error.code !== 'ENOENT') {
+            if (error?.code !== 'ENOENT') {
                 throw error;
             }
         }
@@ -262,8 +271,8 @@ export class RequestLogger {
     // 新增：获取指定目录统计信息的方法
     private async getDirectoryStats(directory: string, prefix: string): Promise<{ totalFiles: number; totalSize: number; oldestFile?: string; newestFile?: string }> {
         try {
-            const files = await fs.readdir(directory);
-            const targetFiles = files.filter(file => file.startsWith(prefix) && file.endsWith('.json'));
+            const files: string[] = await fs.readdir(directory);
+            const targetFiles = files.filter((file: string) => file.startsWith(prefix) && file.endsWith('.json'));
             
             let totalSize = 0;
             let oldestTime = Infinity;
@@ -293,8 +302,8 @@ export class RequestLogger {
                 oldestFile: oldestFile || undefined,
                 newestFile: newestFile || undefined,
             };
-        } catch (error) {
-            if (error.code === 'ENOENT') {
+        } catch (error: any) {
+            if (error?.code === 'ENOENT') {
                 return { totalFiles: 0, totalSize: 0 };
             }
             throw error;

@@ -126,13 +126,13 @@ export class Server {
                 }
                 
                 return response;
-            } catch (handlerError) {
+            } catch (handlerError: any) {
                 // 记录错误响应
                 try {
                     const errorInfo = {
-                        code: handlerError.code || 'UNKNOWN_ERROR',
-                        message: handlerError.message || '未知错误',
-                        data: handlerError.data || undefined,
+                        code: handlerError?.code || 'UNKNOWN_ERROR',
+                        message: handlerError?.message || '未知错误',
+                        data: handlerError?.data || undefined,
                     };
                     
                     await this.requestLogger.logResponse(requestId, undefined, errorInfo, startTime);
