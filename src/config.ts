@@ -11,20 +11,18 @@ export interface ConnectOptions {
     timeoutMS: number;
 }
 
-// If we decide to support non-string config options, we'll need to extend the mechanism for parsing
-// env variables.
-export interface UserConfig {
-    apiBaseUrl: string;
+export type UserConfig = {
+    connectionString?: string;
     apiClientId?: string;
     apiClientSecret?: string;
-    telemetry?: "enabled" | "disabled";
-    logPath: string;
-    connectionString?: string;
-    connectOptions: ConnectOptions;
-    disabledTools: Array<string>;
-    readOnly?: boolean;
     defaultDatabase?: string;
-}
+    logPath: string;
+    logLevel: LogLevel;
+    readOnly: boolean;
+    disabledTools: string[];
+    telemetry: "enabled" | "disabled";
+    connectOptions: ConnectOptions;
+};
 
 const defaults: UserConfig = {
     apiBaseUrl: "https://cloud.mongodb.com/",

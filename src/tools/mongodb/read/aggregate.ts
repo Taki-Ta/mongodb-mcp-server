@@ -29,7 +29,7 @@ export class AggregateTool extends MongoDBToolBase {
         return {
             content: [
                 {
-                    text: JSON.stringify(documents, null, 2),
+                    text: EJSON.stringify(documents, null, 2),
                     type: "text",
                 }
             ],

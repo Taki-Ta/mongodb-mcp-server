@@ -1,6 +1,7 @@
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { DbOperationArgs, MongoDBToolBase } from "../mongodbTool.js";
 import { ToolArgs, OperationType } from "../../tool.js";
+import { EJSON } from "bson";
 
 export class ListCollectionsTool extends MongoDBToolBase {
     protected name = "list-collections";
@@ -19,7 +20,7 @@ export class ListCollectionsTool extends MongoDBToolBase {
         return {
             content: [
                 {
-                    text: JSON.stringify(collections, null, 2),
+                    text: EJSON.stringify(collections, null, 2),
                     type: "text",
                 },
             ],

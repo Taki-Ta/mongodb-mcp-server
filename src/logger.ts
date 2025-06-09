@@ -26,6 +26,10 @@ export const LogId = {
     toolExecute: mongoLogId(1_003_001),
     toolExecuteFailure: mongoLogId(1_003_002),
     toolDisabled: mongoLogId(1_003_003),
+    toolInputReceived: mongoLogId(1_003_004),
+    toolOutputGenerated: mongoLogId(1_003_005),
+    toolJsonValidation: mongoLogId(1_003_006),
+    toolJsonValidationFailure: mongoLogId(1_003_007),
 
     mongodbConnectFailure: mongoLogId(1_004_001),
     mongodbDisconnectFailure: mongoLogId(1_004_002),

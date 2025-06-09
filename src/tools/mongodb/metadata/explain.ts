@@ -6,6 +6,7 @@ import { ExplainVerbosity, Document } from "mongodb";
 import { AggregateArgs } from "../read/aggregate.js";
 import { FindArgs } from "../read/find.js";
 import { CountArgs } from "../read/count.js";
+import { EJSON } from "bson";
 
 export class ExplainTool extends MongoDBToolBase {
     protected name = "explain";
@@ -91,7 +92,7 @@ export class ExplainTool extends MongoDBToolBase {
         return {
             content: [
                 {
-                    text: JSON.stringify(result, null, 2),
+                    text: EJSON.stringify(result, null, 2),
                     type: "text",
                 },
             ],

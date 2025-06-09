@@ -13,3 +13,8 @@ tests/tmp
 coverage
 
 *.txt
+
+# 调试相关
+debug-logs/
+debug-output.txt
+debug-info.txt
