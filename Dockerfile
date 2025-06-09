@@ -12,7 +12,8 @@ RUN npm ci --registry=http://registry.npmmirror.com
 RUN npm i --global --registry=http://registry.npmmirror.com mcp-proxy
 
 ENV PORT=8000
-ENV MDB_MCP_CONNECTION_STRING=mongodb://gw:123.zxc@10.10.1.105:27017/ChatBI
+ENV MDB_MCP_CONNECTION_STRING=mongodb://chatbi:chatbi@10.10.1.105:27017/ChatBI
+ENV MDB_DB=ChatBI
 
 # 使用本地构建的版本
 CMD mcp-proxy --port ${PORT} node dist/index.js

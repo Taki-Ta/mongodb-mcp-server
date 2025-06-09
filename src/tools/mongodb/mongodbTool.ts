@@ -6,12 +6,21 @@ import { ErrorCodes, MongoDBError } from "../../errors.js";
 import logger, { LogId } from "../../logger.js";
 
 export const DbOperationArgs = {
-    database: z.string().describe("Database name"),
+    database: z.string().describe("Database name").optional(),
     collection: z.string().describe("Collection name"),
 };
 
 export abstract class MongoDBToolBase extends ToolBase {
     protected category: ToolCategory = "mongodb";
+
+    protected getDefaultDatabase(): string {
+        // 优先从环境变量 MDB_DB 获取，然后从配置获取，最后使用默认值
+        return process.env.MDB_DB || this.config.defaultDatabase || "ChatBI";
+    }
+
+    protected resolveDatabase(providedDatabase?: string): string {
+        return providedDatabase || this.getDefaultDatabase();
+    }
 
     protected async ensureConnected(): Promise<NodeDriverServiceProvider> {
         if (!this.session.serviceProvider && this.config.connectionString) {

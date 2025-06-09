@@ -1,7 +1,7 @@
 import { ConnectTool } from "./metadata/connect.js";
 import { ListCollectionsTool } from "./metadata/listCollections.js";
 import { CollectionIndexesTool } from "./read/collectionIndexes.js";
-import { ListDatabasesTool } from "./metadata/listDatabases.js";
+// import { ListDatabasesTool } from "./metadata/listDatabases.js";
 // import { CollectionSchemaTool } from "./metadata/collectionSchema.js";
 import { FindTool } from "./read/find.js";
 // import { CollectionStorageSizeTool } from "./metadata/collectionStorageSize.js";
@@ -16,7 +16,7 @@ export const MongoDbTools = [
     ConnectTool,
     
     // 元数据查询工具
-    ListDatabasesTool,
+    // ListDatabasesTool, // 已注释掉，限制只使用指定数据库
     ListCollectionsTool,
     // CollectionSchemaTool,
     // CollectionStorageSizeTool,

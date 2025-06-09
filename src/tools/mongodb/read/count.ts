@@ -24,12 +24,13 @@ export class CountTool extends MongoDBToolBase {
 
     protected async execute({ database, collection, query }: ToolArgs<typeof this.argsShape>): Promise<CallToolResult> {
         const provider = await this.ensureConnected();
-        const count = await provider.count(database, collection, query);
+        const resolvedDatabase = this.resolveDatabase(database);
+        const count = await provider.count(resolvedDatabase, collection, query);
 
         return {
             content: [
                 {
-                    text: `Found ${count} documents in the collection "${collection}"`,
+                    text: `Count: ${count} documents in collection "${collection}" from database "${resolvedDatabase}"`,
                     type: "text",
                 },
             ],

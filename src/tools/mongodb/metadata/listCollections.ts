@@ -13,14 +13,15 @@ export class ListCollectionsTool extends MongoDBToolBase {
 
     protected async execute({ database }: ToolArgs<typeof this.argsShape>): Promise<CallToolResult> {
         const provider = await this.ensureConnected();
-        const collections = await provider.listCollections(database);
+        const resolvedDatabase = this.resolveDatabase(database);
+        const collections = await provider.listCollections(resolvedDatabase);
 
         if (collections.length === 0) {
             return {
                 content: [
                     {
                         type: "text",
-                        text: `No collections found for database "${database}". To create a collection, use the "create-collection" tool.`,
+                        text: `No collections found for database "${resolvedDatabase}". To create a collection, use the "create-collection" tool.`,
                     },
                 ],
             };
@@ -29,7 +30,7 @@ export class ListCollectionsTool extends MongoDBToolBase {
         return {
             content: collections.map((collection) => {
                 return {
-                    text: `Name: "${collection.name}"`,
+                    text: `Name: "${collection.name}" in database "${resolvedDatabase}"`,
                     type: "text",
                 };
             }),

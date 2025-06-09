@@ -166,6 +166,7 @@ The MongoDB MCP Server can be configured using multiple methods, with the follow
 | `apiClientId`      | Atlas API client ID for authentication                                                                                |
 | `apiClientSecret`  | Atlas API client secret for authentication                                                                            |
 | `connectionString` | MongoDB connection string for direct database connections (optional users may choose to inform it on every tool call) |
+| `defaultDatabase`  | Default database name for MongoDB operations. Can be set via `--database` arg or `MDB_DB`/`MDB_MCP_DEFAULT_DATABASE` env vars. Defaults to "ChatBI" |
 | `logPath`          | Folder to store logs                                                                                                  |
 | `disabledTools`    | An array of tool names, operation types, and/or categories of tools that will be disabled                             |
 | `readOnly`         | When set to true, only allows read and metadata operation types, disabling create/update/delete operations            |
@@ -213,6 +214,23 @@ You can enable read-only mode using:
 - **Command-line argument**: `--readOnly`
 
 When read-only mode is active, you'll see a message in the server logs indicating which tools were prevented from registering due to this restriction.
+
+#### Database Restriction
+
+The `defaultDatabase` configuration option allows you to restrict the MCP server to operate only on a specific database. When configured, all database tools will use the specified database by default, and the `list-databases` tool is disabled to prevent discovery of other databases.
+
+This is useful for scenarios where you want to limit access to a specific database for security or operational reasons.
+
+You can set the default database using:
+
+- **Environment variable**: `export MDB_DB=ChatBI` or `export MDB_MCP_DEFAULT_DATABASE=ChatBI`
+- **Command-line argument**: `--database ChatBI`
+- **Docker environment variable**: `-e MDB_DB=ChatBI`
+
+When a default database is configured:
+- All database operations will use this database unless explicitly overridden in the tool arguments
+- The `list-databases` tool is disabled to prevent database discovery
+- Users can still specify a different database name in individual tool calls if needed
 
 #### Telemetry
 
@@ -265,6 +283,11 @@ export MDB_MCP_API_CLIENT_SECRET="your-atlas-service-accounts-client-secret"
 # Set a custom MongoDB connection string
 export MDB_MCP_CONNECTION_STRING="mongodb+srv://username:password@cluster.mongodb.net/myDatabase"
 
+# Set default database for operations (limits MCP to only use this database)
+export MDB_MCP_DEFAULT_DATABASE="ChatBI"
+# Or alternatively, use the shorter form:
+export MDB_DB="ChatBI"
+
 export MDB_MCP_LOG_PATH="/path/to/logs"
 
 ```
@@ -309,7 +332,7 @@ export MDB_MCP_LOG_PATH="/path/to/logs"
 Pass configuration options as command-line arguments when starting the server:
 
 ```shell
-npx -y mongodb-mcp-server --apiClientId="your-atlas-service-accounts-client-id" --apiClientSecret="your-atlas-service-accounts-client-secret" --connectionString="mongodb+srv://username:password@cluster.mongodb.net/myDatabase" --logPath=/path/to/logs
+npx -y mongodb-mcp-server --apiClientId="your-atlas-service-accounts-client-id" --apiClientSecret="your-atlas-service-accounts-client-secret" --connectionString="mongodb+srv://username:password@cluster.mongodb.net/myDatabase" --database="ChatBI" --logPath=/path/to/logs
 ```
 
 #### MCP configuration file examples

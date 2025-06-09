@@ -23,6 +23,7 @@ export interface UserConfig {
     connectOptions: ConnectOptions;
     disabledTools: Array<string>;
     readOnly?: boolean;
+    defaultDatabase?: string;
 }
 
 const defaults: UserConfig = {
@@ -37,6 +38,7 @@ const defaults: UserConfig = {
     disabledTools: [],
     telemetry: "enabled",
     readOnly: false,
+    defaultDatabase: "ChatBI",
 };
 
 export const config = {
@@ -96,6 +98,8 @@ function getEnvConfig(): Partial<UserConfig> {
     }
 
     const result: Record<string, unknown> = {};
+    
+    // 处理标准的 MDB_MCP_ 前缀环境变量
     const mcpVariables = Object.entries(process.env).filter(
         ([key, value]) => value !== undefined && key.startsWith("MDB_MCP_")
     ) as [string, string][];
@@ -106,6 +110,11 @@ function getEnvConfig(): Partial<UserConfig> {
             .map((part) => SNAKE_CASE_toCamelCase(part));
 
         setValue(result, fieldPath, value);
+    }
+    
+    // 特殊处理 MDB_DB 环境变量，映射到 defaultDatabase
+    if (process.env.MDB_DB) {
+        result.defaultDatabase = process.env.MDB_DB;
     }
 
     return result;

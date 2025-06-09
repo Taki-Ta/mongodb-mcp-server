@@ -10,12 +10,13 @@ export class CollectionIndexesTool extends MongoDBToolBase {
 
     protected async execute({ database, collection }: ToolArgs<typeof DbOperationArgs>): Promise<CallToolResult> {
         const provider = await this.ensureConnected();
-        const indexes = await provider.getIndexes(database, collection);
+        const resolvedDatabase = this.resolveDatabase(database);
+        const indexes = await provider.getIndexes(resolvedDatabase, collection);
 
         return {
             content: [
                 {
-                    text: `Found ${indexes.length} indexes in the collection "${collection}":`,
+                    text: `Found ${indexes.length} indexes in the collection "${collection}" from database "${resolvedDatabase}":`,
                     type: "text",
                 },
                 ...(indexes.map((indexDefinition) => {
@@ -33,10 +34,11 @@ export class CollectionIndexesTool extends MongoDBToolBase {
         args: ToolArgs<typeof this.argsShape>
     ): Promise<CallToolResult> | CallToolResult {
         if (error instanceof Error && "codeName" in error && error.codeName === "NamespaceNotFound") {
+            const resolvedDatabase = this.resolveDatabase(args.database);
             return {
                 content: [
                     {
-                        text: `The indexes for "${args.database}.${args.collection}" cannot be determined because the collection does not exist.`,
+                        text: `The indexes for "${resolvedDatabase}.${args.collection}" cannot be determined because the collection does not exist.`,
                         type: "text",
                     },
                 ],
