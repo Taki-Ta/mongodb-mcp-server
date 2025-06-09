@@ -16,15 +16,9 @@ export class CollectionIndexesTool extends MongoDBToolBase {
         return {
             content: [
                 {
-                    text: `Found ${indexes.length} indexes in the collection "${collection}" from database "${resolvedDatabase}":`,
+                    text: JSON.stringify(indexes, null, 2),
                     type: "text",
                 },
-                ...(indexes.map((indexDefinition) => {
-                    return {
-                        text: `Name "${indexDefinition.name}", definition: ${JSON.stringify(indexDefinition.key)}`,
-                        type: "text",
-                    };
-                }) as { text: string; type: "text" }[]),
             ],
         };
     }
@@ -34,11 +28,10 @@ export class CollectionIndexesTool extends MongoDBToolBase {
         args: ToolArgs<typeof this.argsShape>
     ): Promise<CallToolResult> | CallToolResult {
         if (error instanceof Error && "codeName" in error && error.codeName === "NamespaceNotFound") {
-            const resolvedDatabase = this.resolveDatabase(args.database);
             return {
                 content: [
                     {
-                        text: `The indexes for "${resolvedDatabase}.${args.collection}" cannot be determined because the collection does not exist.`,
+                        text: JSON.stringify({ error: "Collection not found" }, null, 2),
                         type: "text",
                     },
                 ],

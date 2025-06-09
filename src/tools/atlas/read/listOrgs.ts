@@ -12,21 +12,16 @@ export class ListOrganizationsTool extends AtlasToolBase {
         const data = await this.session.apiClient.listOrganizations();
 
         if (!data?.results?.length) {
-            throw new Error("No projects found in your MongoDB Atlas account.");
+            throw new Error("No organizations found in your MongoDB Atlas account.");
         }
 
-        // Format projects as a table
-        const output =
-            `Organization Name | Organization ID
-----------------| ----------------
-` +
-            data.results
-                .map((org) => {
-                    return `${org.name} | ${org.id}`;
-                })
-                .join("\n");
+        const organizations = data.results.map((org) => ({
+            name: org.name,
+            id: org.id
+        }));
+
         return {
-            content: [{ type: "text", text: output }],
+            content: [{ type: "text", text: JSON.stringify(organizations, null, 2) }],
         };
     }
 }

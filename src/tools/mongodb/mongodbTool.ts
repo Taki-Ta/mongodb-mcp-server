@@ -54,11 +54,10 @@ export abstract class MongoDBToolBase extends ToolBase {
                         content: [
                             {
                                 type: "text",
-                                text: "You need to connect to a MongoDB instance before you can access its data.",
-                            },
-                            {
-                                type: "text",
-                                text: "Please use the 'connect' or 'switch-connection' tool to connect to a MongoDB instance.",
+                                text: JSON.stringify({
+                                    error: "Not connected to MongoDB",
+                                    message: "You need to connect to a MongoDB instance before you can access its data."
+                                }, null, 2),
                             },
                         ],
                         isError: true,
@@ -68,7 +67,10 @@ export abstract class MongoDBToolBase extends ToolBase {
                         content: [
                             {
                                 type: "text",
-                                text: "The configured connection string is not valid. Please check the connection string and confirm it points to a valid MongoDB instance. Alternatively, use the 'switch-connection' tool to connect to a different instance.",
+                                text: JSON.stringify({
+                                    error: "Invalid connection string",
+                                    message: "The configured connection string is not valid."
+                                }, null, 2),
                             },
                         ],
                         isError: true,

@@ -1,0 +1,83 @@
+name: Cleanup Old Artifacts
+
+on:
+  schedule:
+    # 每周日凌晨2点运行
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Delete old artifacts
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: artifacts } = await github.rest.actions.listArtifactsForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 100
+          });
+          
+          const cutoffDate = new Date();
+          cutoffDate.setDate(cutoffDate.getDate() - 30); // 保留30天内的artifacts
+          
+          const toDelete = artifacts.artifacts.filter(artifact => {
+            const createdAt = new Date(artifact.created_at);
+            return createdAt < cutoffDate;
+          });
+          
+          console.log(`Found ${toDelete.length} artifacts to delete`);
+          
+          for (const artifact of toDelete) {
+            try {
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id
+              });
+              console.log(`Deleted artifact: ${artifact.name} (${artifact.size_in_bytes} bytes)`);
+            } catch (error) {
+              console.error(`Failed to delete artifact ${artifact.name}:`, error);
+            }
+          }
+          
+          console.log('Cleanup completed');
+
+    - name: Delete old workflow runs
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 100,
+            status: 'completed'
+          });
+          
+          const cutoffDate = new Date();
+          cutoffDate.setDate(cutoffDate.getDate() - 90); // 保留90天内的workflow runs
+          
+          const toDelete = runs.workflow_runs.filter(run => {
+            const createdAt = new Date(run.created_at);
+            return createdAt < cutoffDate && run.status === 'completed';
+          });
+          
+          console.log(`Found ${toDelete.length} workflow runs to delete`);
+          
+          for (const run of toDelete) {
+            try {
+              await github.rest.actions.deleteWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: run.id
+              });
+              console.log(`Deleted workflow run: ${run.id} from ${run.created_at}`);
+            } catch (error) {
+              console.error(`Failed to delete workflow run ${run.id}:`, error);
+            }
+          }
+          
+          console.log('Workflow runs cleanup completed'); 

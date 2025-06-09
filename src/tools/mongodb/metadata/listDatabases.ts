@@ -14,13 +14,18 @@ export class ListDatabasesTool extends MongoDBToolBase {
         const provider = await this.ensureConnected();
         const dbs = (await provider.listDatabases("")).databases as { name: string; sizeOnDisk: bson.Long }[];
 
+        const dbsFormatted = dbs.map(db => ({
+            name: db.name,
+            sizeOnDisk: db.sizeOnDisk.toString()
+        }));
+
         return {
-            content: dbs.map((db) => {
-                return {
-                    text: `Name: ${db.name}, Size: ${db.sizeOnDisk.toString()} bytes`,
+            content: [
+                {
+                    text: JSON.stringify(dbsFormatted, null, 2),
                     type: "text",
-                };
-            }),
+                },
+            ],
         };
     }
 }

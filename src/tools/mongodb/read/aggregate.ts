@@ -26,21 +26,13 @@ export class AggregateTool extends MongoDBToolBase {
         const resolvedDatabase = this.resolveDatabase(database);
         const documents = await provider.aggregate(resolvedDatabase, collection, pipeline).toArray();
 
-        const content: Array<{ text: string; type: "text" }> = [
-            {
-                text: `Aggregation results from collection "${collection}" in database "${resolvedDatabase}": Found ${documents.length} documents`,
-                type: "text",
-            },
-            ...documents.map((doc) => {
-                return {
-                    text: EJSON.stringify(doc),
-                    type: "text",
-                } as { text: string; type: "text" };
-            }),
-        ];
-
         return {
-            content,
+            content: [
+                {
+                    text: JSON.stringify(documents, null, 2),
+                    type: "text",
+                }
+            ],
         };
     }
 }

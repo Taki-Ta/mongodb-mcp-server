@@ -37,18 +37,16 @@ export class ListProjectsTool extends AtlasToolBase {
             throw new Error("No projects found in your MongoDB Atlas account.");
         }
 
-        // Format projects as a table
-        const rows = data.results
-            .map((project) => {
-                const createdAt = project.created ? new Date(project.created).toLocaleString() : "N/A";
-                return `${project.name} | ${project.id} | ${orgs[project.orgId]} | ${project.orgId} | ${createdAt}`;
-            })
-            .join("\n");
-        const formattedProjects = `Project Name | Project ID | Organization Name | Organization ID | Created At
-----------------| ----------------| ----------------| ----------------| ----------------
-${rows}`;
+        const projects = data.results.map((project) => ({
+            name: project.name,
+            id: project.id,
+            organizationName: orgs[project.orgId],
+            organizationId: project.orgId,
+            createdAt: project.created ? new Date(project.created).toISOString() : null
+        }));
+
         return {
-            content: [{ type: "text", text: formattedProjects }],
+            content: [{ type: "text", text: JSON.stringify(projects, null, 2) }],
         };
     }
 }

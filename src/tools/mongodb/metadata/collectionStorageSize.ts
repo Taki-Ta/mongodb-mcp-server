@@ -24,7 +24,11 @@ export class CollectionStorageSizeTool extends MongoDBToolBase {
         return {
             content: [
                 {
-                    text: `The size of "${resolvedDatabase}.${collection}" is \`${scaledValue.toFixed(2)} ${units}\``,
+                    text: JSON.stringify({
+                        sizeBytes: value,
+                        size: scaledValue,
+                        units: units
+                    }, null, 2),
                     type: "text",
                 },
             ],
@@ -36,11 +40,10 @@ export class CollectionStorageSizeTool extends MongoDBToolBase {
         args: ToolArgs<typeof this.argsShape>
     ): Promise<CallToolResult> | CallToolResult {
         if (error instanceof Error && "codeName" in error && error.codeName === "NamespaceNotFound") {
-            const resolvedDatabase = this.resolveDatabase(args.database);
             return {
                 content: [
                     {
-                        text: `The size of "${resolvedDatabase}.${args.collection}" cannot be determined because the collection does not exist.`,
+                        text: JSON.stringify({ error: "Collection not found" }, null, 2),
                         type: "text",
                     },
                 ],

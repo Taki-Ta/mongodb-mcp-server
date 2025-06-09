@@ -38,17 +38,12 @@ export class LogsTool extends MongoDBToolBase {
         return {
             content: [
                 {
-                    text: `Found: ${result.totalLinesWritten} messages`,
+                    text: JSON.stringify({
+                        totalLinesWritten: result.totalLinesWritten,
+                        logs: logs
+                    }, null, 2),
                     type: "text",
                 },
-
-                ...logs.map(
-                    (log) =>
-                        ({
-                            text: log,
-                            type: "text",
-                        }) as const
-                ),
             ],
         };
     }

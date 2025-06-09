@@ -23,11 +23,7 @@ export class DbStatsTool extends MongoDBToolBase {
         return {
             content: [
                 {
-                    text: `Statistics for database ${resolvedDatabase}`,
-                    type: "text",
-                },
-                {
-                    text: EJSON.stringify(result),
+                    text: JSON.stringify(result, null, 2),
                     type: "text",
                 },
             ],

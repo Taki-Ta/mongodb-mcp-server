@@ -125,7 +125,9 @@ export abstract class ToolBase {
             content: [
                 {
                     type: "text",
-                    text: `Error running ${this.name}: ${error instanceof Error ? error.message : String(error)}`,
+                    text: JSON.stringify({
+                        error: error instanceof Error ? error.message : String(error)
+                    }, null, 2),
                 },
             ],
             isError: true,

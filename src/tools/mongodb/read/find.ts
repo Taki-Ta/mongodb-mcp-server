@@ -42,21 +42,13 @@ export class FindTool extends MongoDBToolBase {
         const resolvedDatabase = this.resolveDatabase(database);
         const documents = await provider.find(resolvedDatabase, collection, filter, { projection, limit, sort }).toArray();
 
-        const content: Array<{ text: string; type: "text" }> = [
-            {
-                text: `Found ${documents.length} documents in the collection "${collection}" from database "${resolvedDatabase}":`,
-                type: "text",
-            },
-            ...documents.map((doc) => {
-                return {
-                    text: EJSON.stringify(doc),
-                    type: "text",
-                } as { text: string; type: "text" };
-            }),
-        ];
-
         return {
-            content,
+            content: [
+                {
+                    text: JSON.stringify(documents, null, 2),
+                    type: "text",
+                }
+            ],
         };
     }
 }

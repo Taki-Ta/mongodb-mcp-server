@@ -68,7 +68,7 @@ export class ConnectTool extends MongoDBToolBase {
         await this.connectToMongoDB(connectionString);
         this.updateMetadata();
         return {
-            content: [{ type: "text", text: "Successfully connected to MongoDB." }],
+            content: [{ type: "text", text: JSON.stringify({ status: "connected" }, null, 2) }],
         };
     }
 

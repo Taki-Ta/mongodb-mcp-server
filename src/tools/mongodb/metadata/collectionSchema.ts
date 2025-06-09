@@ -16,26 +16,10 @@ export class CollectionSchemaTool extends MongoDBToolBase {
         const documents = await provider.find(resolvedDatabase, collection, {}, { limit: 5 }).toArray();
         const schema = await getSimplifiedSchema(documents);
 
-        const fieldsCount = Object.entries(schema).length;
-        if (fieldsCount === 0) {
-            return {
-                content: [
-                    {
-                        text: `Could not deduce the schema for "${resolvedDatabase}.${collection}". This may be because it doesn't exist or is empty.`,
-                        type: "text",
-                    },
-                ],
-            };
-        }
-
         return {
             content: [
                 {
-                    text: `Found ${fieldsCount} fields in the schema for "${resolvedDatabase}.${collection}"`,
-                    type: "text",
-                },
-                {
-                    text: JSON.stringify(schema),
+                    text: JSON.stringify(schema, null, 2),
                     type: "text",
                 },
             ],
