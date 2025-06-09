@@ -18,3 +18,7 @@ coverage
 debug-logs/
 debug-output.txt
 debug-info.txt
+
+# 请求日志
+**/requests/
+request_*.json

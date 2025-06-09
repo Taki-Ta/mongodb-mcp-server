@@ -26,6 +26,12 @@ export type UserConfig = {
     disabledTools: string[];
     telemetry: "enabled" | "disabled";
     connectOptions: ConnectOptions;
+    requestLogging: {
+        enabled: boolean;
+        retentionDays: number;
+        includeHeaders: boolean;
+        includeBody: boolean;
+    };
 };
 
 const defaults: UserConfig = {
@@ -42,6 +48,12 @@ const defaults: UserConfig = {
     telemetry: "enabled",
     readOnly: false,
     defaultDatabase: "ChatBI",
+    requestLogging: {
+        enabled: true,
+        retentionDays: 7,
+        includeHeaders: true,
+        includeBody: true,
+    },
 };
 
 export const config = {

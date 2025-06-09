@@ -11,6 +11,7 @@ import { type ServerEvent } from "./telemetry/types.js";
 import { type ServerCommand } from "./telemetry/types.js";
 import { CallToolRequestSchema, CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import assert from "assert";
+import { RequestLogger } from "./requestLogger.js";
 
 export interface ServerOptions {
     session: Session;
@@ -25,6 +26,7 @@ export class Server {
     private readonly telemetry: Telemetry;
     public readonly userConfig: UserConfig;
     private readonly startTime: number;
+    private readonly requestLogger: RequestLogger;
 
     constructor({ session, mcpServer, userConfig, telemetry }: ServerOptions) {
         this.startTime = Date.now();
@@ -32,9 +34,13 @@ export class Server {
         this.telemetry = telemetry;
         this.mcpServer = mcpServer;
         this.userConfig = userConfig;
+        this.requestLogger = new RequestLogger(userConfig.logPath, userConfig.requestLogging);
     }
 
     async connect(transport: Transport): Promise<void> {
+        // 初始化请求日志记录器
+        await this.requestLogger.initialize();
+
         this.mcpServer.server.registerCapabilities({ logging: {} });
 
         this.registerTools();
@@ -55,7 +61,44 @@ export class Server {
 
         assert(existingHandler, "No existing handler found for CallToolRequestSchema");
 
-        this.mcpServer.server.setRequestHandler(CallToolRequestSchema, (request, extra): Promise<CallToolResult> => {
+        this.mcpServer.server.setRequestHandler(CallToolRequestSchema, async (request, extra): Promise<CallToolResult> => {
+            // 生成请求ID
+            const requestId = new ObjectId().toString();
+            
+            // 记录请求信息
+            try {
+                const clientInfo = {
+                    name: this.mcpServer.server.getClientVersion()?.name,
+                    version: this.mcpServer.server.getClientVersion()?.version,
+                };
+
+                // 记录完整请求（包括请求头和请求体）
+                await this.requestLogger.logFullRequest(
+                    requestId,
+                    request.method || 'unknown',
+                    {
+                        // 从transport中提取可能的请求头信息
+                        transport: transport.constructor.name,
+                        timestamp: new Date().toISOString(),
+                        sessionId: this.session.sessionId,
+                    },
+                    request,
+                    clientInfo
+                );
+
+                logger.debug(
+                    LogId.toolInputReceived, 
+                    "server", 
+                    `收到请求 ${requestId}: ${request.method} - 已记录到文件`
+                );
+            } catch (error) {
+                logger.error(
+                    LogId.toolExecuteFailure, 
+                    "server", 
+                    `记录请求失败 ${requestId}: ${error}`
+                );
+            }
+
             if (!request.params.arguments) {
                 request.params.arguments = {};
             }
@@ -78,6 +121,9 @@ export class Server {
             );
 
             this.emitServerEvent("start", Date.now() - this.startTime);
+
+            // 启动日志清理任务
+            this.startLogCleanupTask();
         };
 
         this.mcpServer.server.onclose = () => {
@@ -97,6 +143,28 @@ export class Server {
         await this.telemetry.close();
         await this.session.close();
         await this.mcpServer.close();
+    }
+
+    /**
+     * 启动日志清理任务
+     */
+    private startLogCleanupTask(): void {
+        // 每天清理一次过期的请求日志
+        const cleanupInterval = 24 * 60 * 60 * 1000; // 24小时
+        
+        setInterval(async () => {
+            try {
+                await this.requestLogger.cleanupOldLogs(); // 使用配置中的保留天数
+                logger.debug(LogId.serverInitialized, "server", "请求日志清理完成");
+            } catch (error) {
+                logger.error(LogId.serverStartFailure, "server", `请求日志清理失败: ${error}`);
+            }
+        }, cleanupInterval);
+
+        // 立即执行一次清理
+        this.requestLogger.cleanupOldLogs().catch((error) => {
+            logger.error(LogId.serverStartFailure, "server", `初始请求日志清理失败: ${error}`);
+        });
     }
 
     /**
