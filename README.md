@@ -45,6 +45,41 @@ Note: The configuration file syntax can be different across clients. Please refe
 - **Claude Desktop**: https://modelcontextprotocol.io/quickstart/user
 - **Cursor**: https://docs.cursor.com/context/model-context-protocol
 
+#### 🐳 Docker 部署
+
+我们提供预构建的Docker镜像，可以通过GitHub Actions下载：
+
+**下载镜像：**
+1. 访问 [GitHub Actions](../../actions/workflows/docker-build.yml) 页面
+2. 选择最新的构建运行记录
+3. 在 "Artifacts" 部分下载 `mongodb-mcp-server-{version}-amd64.tar.gz`
+
+**使用方法：**
+```bash
+# 解压并加载镜像
+gunzip mongodb-mcp-server-{version}-amd64.tar.gz
+docker load -i mongodb-mcp-server-{version}-amd64.tar
+
+# 运行容器
+docker run -d -p 8000:8000 \
+  -e MDB_MCP_CONNECTION_STRING="mongodb+srv://username:password@cluster.mongodb.net/myDatabase" \
+  -e MDB_DB="myDatabase" \
+  mongodb-mcp-server:latest
+
+# 或使用Atlas API凭据
+docker run -d -p 8000:8000 \
+  -e MDB_MCP_API_CLIENT_ID="your-client-id" \
+  -e MDB_MCP_API_CLIENT_SECRET="your-client-secret" \
+  mongodb-mcp-server:latest
+```
+
+**Docker环境变量：**
+- `PORT`: 服务端口 (默认: 8000)
+- `MDB_MCP_CONNECTION_STRING`: MongoDB连接字符串
+- `MDB_DB`: 默认数据库名称 (默认: ChatBI)
+- `MDB_MCP_API_CLIENT_ID`: Atlas API客户端ID
+- `MDB_MCP_API_CLIENT_SECRET`: Atlas API客户端密钥
+
 #### Option 1: Connection String args
 
 You can pass your connection string via args, make sure to use a valid username and password.

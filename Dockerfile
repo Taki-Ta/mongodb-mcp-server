@@ -5,13 +5,17 @@ WORKDIR /app
 # 复制package.json和package-lock.json
 COPY package*.json ./
 
+# 复制TypeScript配置文件
+COPY tsconfig*.json ./
+
 # 安装所有依赖（包括devDependencies用于构建）
-RUN npm ci --registry=http://registry.npmmirror.com
+# 使用--ignore-scripts避免自动运行prepare脚本
+RUN npm ci --registry=http://registry.npmmirror.com --ignore-scripts
 
 # 复制源代码
 COPY . .
 
-# 构建TypeScript
+# 手动构建TypeScript
 RUN npm run build
 
 # 生产阶段
@@ -23,7 +27,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 只安装生产依赖
-RUN npm ci --only=production --registry=http://registry.npmmirror.com && \
+RUN npm ci --only=production --registry=http://registry.npmmirror.com --ignore-scripts && \
     npm cache clean --force
 
 # 全局安装mcp-proxy
@@ -44,5 +48,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/health || exit 1
 
-# 使用本地构建的版本
-CMD mcp-proxy --port ${PORT} node dist/index.js
+# 使用本地构建的版本 - 使用JSON格式避免shell解析问题
+CMD ["sh", "-c", "mcp-proxy --port ${PORT} node dist/index.js"]
