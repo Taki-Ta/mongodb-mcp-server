@@ -21,7 +21,7 @@ export class ListOrganizationsTool extends AtlasToolBase {
         }));
 
         return {
-            content: [{ type: "text", text: JSON.stringify(organizations, null, 2) }],
+            content: [{ type: "text", text: JSON.stringify(organizations, undefined, 2) }],
         };
     }
 }

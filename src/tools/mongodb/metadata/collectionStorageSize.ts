@@ -43,7 +43,7 @@ export class CollectionStorageSizeTool extends MongoDBToolBase {
             return {
                 content: [
                     {
-                        text: JSON.stringify({ error: "Collection not found" }, null, 2),
+                        text: JSON.stringify({ error: "Collection not found" }, undefined, 2),
                         type: "text",
                     },
                 ],

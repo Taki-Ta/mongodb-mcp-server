@@ -20,7 +20,7 @@ export class ListCollectionsTool extends MongoDBToolBase {
         return {
             content: [
                 {
-                    text: EJSON.stringify(collections, null, 2),
+                    text: EJSON.stringify(collections),
                     type: "text",
                 },
             ],

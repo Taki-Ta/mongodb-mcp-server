@@ -19,7 +19,7 @@ export class CollectionSchemaTool extends MongoDBToolBase {
         return {
             content: [
                 {
-                    text: JSON.stringify(schema, null, 2),
+                    text: JSON.stringify(schema, undefined, 2),
                     type: "text",
                 },
             ],

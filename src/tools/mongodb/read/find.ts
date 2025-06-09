@@ -45,7 +45,7 @@ export class FindTool extends MongoDBToolBase {
         return {
             content: [
                 {
-                    text: EJSON.stringify(documents, null, 2),
+                    text: EJSON.stringify(documents),
                     type: "text",
                 }
             ],

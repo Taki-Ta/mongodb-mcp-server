@@ -32,7 +32,8 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "debug": "npm run build && node scripts/debug-mcp.js",
     "debug:json": "npm run build && node -e \"console.log('测试JSON输出...'); require('./scripts/debug-mcp.js').validateJsonOutput('{\\\"test\\\": \\\"value\\\"}')\"",
-    "logs:clean": "rmdir /s /q debug-logs 2>nul || rm -rf debug-logs 2>/dev/null || echo Logs cleaned"
+    "logs:clean": "rmdir /s /q debug-logs 2>nul || rm -rf debug-logs 2>/dev/null || echo Logs cleaned",
+    "test:build": "node scripts/test-build.js"
   },
   "license": "Apache-2.0",
   "devDependencies": {

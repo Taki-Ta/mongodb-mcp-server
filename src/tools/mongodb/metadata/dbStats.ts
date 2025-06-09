@@ -23,7 +23,7 @@ export class DbStatsTool extends MongoDBToolBase {
         return {
             content: [
                 {
-                    text: EJSON.stringify(result, null, 2),
+                    text: EJSON.stringify(result),
                     type: "text",
                 },
             ],

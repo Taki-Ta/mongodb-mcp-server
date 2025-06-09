@@ -1,6 +1,7 @@
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { DbOperationArgs, MongoDBToolBase } from "../mongodbTool.js";
 import { ToolArgs, OperationType } from "../../tool.js";
+import { EJSON } from "bson";
 
 export class CollectionIndexesTool extends MongoDBToolBase {
     protected name = "collection-indexes";
@@ -16,7 +17,7 @@ export class CollectionIndexesTool extends MongoDBToolBase {
         return {
             content: [
                 {
-                    text: JSON.stringify(indexes, null, 2),
+                    text: EJSON.stringify(indexes),
                     type: "text",
                 },
             ],
@@ -31,7 +32,7 @@ export class CollectionIndexesTool extends MongoDBToolBase {
             return {
                 content: [
                     {
-                        text: JSON.stringify({ error: "Collection not found" }, null, 2),
+                        text: JSON.stringify({ error: "Collection not found" }, undefined, 2),
                         type: "text",
                     },
                 ],

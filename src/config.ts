@@ -4,6 +4,9 @@ import argv from "yargs-parser";
 
 import { ReadConcernLevel, ReadPreferenceMode, W } from "mongodb";
 
+// 定义LogLevel类型
+export type LogLevel = "debug" | "info" | "notice" | "warning" | "error" | "critical" | "alert" | "emergency";
+
 export interface ConnectOptions {
     readConcern: ReadConcernLevel;
     readPreference: ReadPreferenceMode;
@@ -12,6 +15,7 @@ export interface ConnectOptions {
 }
 
 export type UserConfig = {
+    apiBaseUrl: string;
     connectionString?: string;
     apiClientId?: string;
     apiClientSecret?: string;
@@ -27,6 +31,7 @@ export type UserConfig = {
 const defaults: UserConfig = {
     apiBaseUrl: "https://cloud.mongodb.com/",
     logPath: getLogPath(),
+    logLevel: "info",
     connectOptions: {
         readConcern: "local",
         readPreference: "secondaryPreferred",

@@ -127,7 +127,7 @@ export abstract class ToolBase {
                     type: "text",
                     text: JSON.stringify({
                         error: error instanceof Error ? error.message : String(error)
-                    }, null, 2),
+                    }, undefined, 2),
                 },
             ],
             isError: true,
@@ -216,7 +216,7 @@ export abstract class ToolBase {
             return JSON.stringify({
                 error: "Invalid JSON format",
                 originalContent: text.substring(0, 200) + (text.length > 200 ? "..." : "")
-            }, null, 2);
+            }, undefined, 2);
         }
     }
 }

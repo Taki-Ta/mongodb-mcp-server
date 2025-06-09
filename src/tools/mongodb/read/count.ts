@@ -30,7 +30,7 @@ export class CountTool extends MongoDBToolBase {
         return {
             content: [
                 {
-                    text: JSON.stringify({ count }, null, 2),
+                    text: JSON.stringify({ count }, undefined, 2),
                     type: "text",
                 },
             ],

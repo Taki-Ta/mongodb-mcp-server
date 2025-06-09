@@ -22,7 +22,7 @@ export class ListDatabasesTool extends MongoDBToolBase {
         return {
             content: [
                 {
-                    text: JSON.stringify(dbsFormatted, null, 2),
+                    text: JSON.stringify(dbsFormatted, undefined, 2),
                     type: "text",
                 },
             ],

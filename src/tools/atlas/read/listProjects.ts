@@ -46,7 +46,7 @@ export class ListProjectsTool extends AtlasToolBase {
         }));
 
         return {
-            content: [{ type: "text", text: JSON.stringify(projects, null, 2) }],
+            content: [{ type: "text", text: JSON.stringify(projects, undefined, 2) }],
         };
     }
 }
