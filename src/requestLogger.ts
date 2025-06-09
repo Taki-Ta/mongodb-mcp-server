@@ -14,12 +14,27 @@ export interface RequestLogEntry {
     };
 }
 
+// 新增响应日志条目接口
+export interface ResponseLogEntry {
+    timestamp: string;
+    requestId: string;
+    responseData?: unknown;
+    error?: {
+        code?: string;
+        message?: string;
+        data?: unknown;
+    };
+    executionTimeMs?: number;
+}
+
 export class RequestLogger {
     private logDir: string;
+    private responseLogDir: string;
     private config: UserConfig['requestLogging'];
 
     constructor(logPath: string, config: UserConfig['requestLogging']) {
         this.logDir = path.join(logPath, "requests");
+        this.responseLogDir = path.join(logPath, "responses");
         this.config = config;
     }
 
@@ -30,6 +45,7 @@ export class RequestLogger {
 
         try {
             await fs.mkdir(this.logDir, { recursive: true });
+            await fs.mkdir(this.responseLogDir, { recursive: true });
         } catch (error) {
             console.error("无法创建请求日志目录:", error);
             // 关闭日志记录以避免继续报错
@@ -54,13 +70,32 @@ export class RequestLogger {
         await this.logRequest(entry);
     }
 
+    // 新增：记录响应的方法
+    async logResponse(requestId: string, responseData?: unknown, error?: { code?: string; message?: string; data?: unknown }, startTime?: number): Promise<void> {
+        if (!this.config.enabled) {
+            return;
+        }
+
+        const executionTimeMs = startTime ? Date.now() - startTime : undefined;
+
+        const entry: ResponseLogEntry = {
+            timestamp: new Date().toISOString(),
+            requestId,
+            ...(responseData && { responseData: this.sanitizeBody(responseData) }),
+            ...(error && { error }),
+            ...(executionTimeMs !== undefined && { executionTimeMs }),
+        };
+
+        await this.logResponseEntry(entry);
+    }
+
     private async logRequest(entry: RequestLogEntry): Promise<void> {
         if (!this.config.enabled) {
             return;
         }
 
         try {
-            const filename = this.generateFilename(entry.timestamp, entry.requestId);
+            const filename = this.generateRequestFilename(entry.timestamp, entry.requestId);
             const logContent = {
                 ...entry,
                 loggedAt: new Date().toISOString(),
@@ -77,11 +112,39 @@ export class RequestLogger {
         }
     }
 
-    private generateFilename(timestamp: string, requestId: string): string {
+    // 新增：写入响应日志的私有方法
+    private async logResponseEntry(entry: ResponseLogEntry): Promise<void> {
+        if (!this.config.enabled) {
+            return;
+        }
+
+        try {
+            const filename = this.generateResponseFilename(entry.timestamp, entry.requestId);
+            const logContent = {
+                ...entry,
+                loggedAt: new Date().toISOString(),
+            };
+
+            const logData = JSON.stringify(logContent, null, 2);
+            await fs.writeFile(path.join(this.responseLogDir, filename), logData, 'utf8');
+        } catch (error) {
+            console.error("写入响应日志失败:", error);
+        }
+    }
+
+    private generateRequestFilename(timestamp: string, requestId: string): string {
         const date = new Date(timestamp);
         const dateStr = date.toISOString().slice(0, 10); // YYYY-MM-DD
         const timeStr = date.toISOString().slice(11, 19).replace(/:/g, '-'); // HH-MM-SS
         return `request_${dateStr}_${timeStr}_${requestId.slice(0, 8)}.json`;
+    }
+
+    // 新增：生成响应文件名的方法
+    private generateResponseFilename(timestamp: string, requestId: string): string {
+        const date = new Date(timestamp);
+        const dateStr = date.toISOString().slice(0, 10); // YYYY-MM-DD
+        const timeStr = date.toISOString().slice(11, 19).replace(/:/g, '-'); // HH-MM-SS
+        return `response_${dateStr}_${timeStr}_${requestId.slice(0, 8)}.json`;
     }
 
     private sanitizeHeaders(headers: Record<string, unknown>): Record<string, unknown> {
@@ -132,15 +195,27 @@ export class RequestLogger {
         }
 
         try {
-            const files = await fs.readdir(this.logDir);
+            // 清理请求日志
+            await this.cleanupDirectory(this.logDir, 'request_');
+            // 清理响应日志
+            await this.cleanupDirectory(this.responseLogDir, 'response_');
+        } catch (error) {
+            console.error("清理旧请求日志失败:", error);
+        }
+    }
+
+    // 新增：清理指定目录的方法
+    private async cleanupDirectory(directory: string, prefix: string): Promise<void> {
+        try {
+            const files = await fs.readdir(directory);
             const cutoffTime = Date.now() - (this.config.retentionDays * 24 * 60 * 60 * 1000);
 
             for (const file of files) {
-                if (!file.startsWith('request_') || !file.endsWith('.json')) {
+                if (!file.startsWith(prefix) || !file.endsWith('.json')) {
                     continue;
                 }
 
-                const filePath = path.join(this.logDir, file);
+                const filePath = path.join(directory, file);
                 const stats = await fs.stat(filePath);
                 
                 if (stats.mtime.getTime() < cutoffTime) {
@@ -148,19 +223,47 @@ export class RequestLogger {
                 }
             }
         } catch (error) {
-            console.error("清理旧请求日志失败:", error);
+            // 目录可能不存在，静默处理
+            if (error.code !== 'ENOENT') {
+                throw error;
+            }
         }
     }
 
-    // 获取日志统计信息
-    async getLogStats(): Promise<{ totalFiles: number; totalSize: number; oldestFile?: string; newestFile?: string }> {
+    // 获取日志统计信息（更新以包含响应日志）
+    async getLogStats(): Promise<{ 
+        requests: { totalFiles: number; totalSize: number; oldestFile?: string; newestFile?: string };
+        responses: { totalFiles: number; totalSize: number; oldestFile?: string; newestFile?: string };
+    }> {
         if (!this.config.enabled) {
-            return { totalFiles: 0, totalSize: 0 };
+            return { 
+                requests: { totalFiles: 0, totalSize: 0 },
+                responses: { totalFiles: 0, totalSize: 0 }
+            };
         }
 
         try {
-            const files = await fs.readdir(this.logDir);
-            const requestFiles = files.filter(file => file.startsWith('request_') && file.endsWith('.json'));
+            const requestStats = await this.getDirectoryStats(this.logDir, 'request_');
+            const responseStats = await this.getDirectoryStats(this.responseLogDir, 'response_');
+
+            return {
+                requests: requestStats,
+                responses: responseStats,
+            };
+        } catch (error) {
+            console.error("获取日志统计失败:", error);
+            return { 
+                requests: { totalFiles: 0, totalSize: 0 },
+                responses: { totalFiles: 0, totalSize: 0 }
+            };
+        }
+    }
+
+    // 新增：获取指定目录统计信息的方法
+    private async getDirectoryStats(directory: string, prefix: string): Promise<{ totalFiles: number; totalSize: number; oldestFile?: string; newestFile?: string }> {
+        try {
+            const files = await fs.readdir(directory);
+            const targetFiles = files.filter(file => file.startsWith(prefix) && file.endsWith('.json'));
             
             let totalSize = 0;
             let oldestTime = Infinity;
@@ -168,8 +271,8 @@ export class RequestLogger {
             let oldestFile = '';
             let newestFile = '';
 
-            for (const file of requestFiles) {
-                const filePath = path.join(this.logDir, file);
+            for (const file of targetFiles) {
+                const filePath = path.join(directory, file);
                 const stats = await fs.stat(filePath);
                 totalSize += stats.size;
 
@@ -185,14 +288,16 @@ export class RequestLogger {
             }
 
             return {
-                totalFiles: requestFiles.length,
+                totalFiles: targetFiles.length,
                 totalSize,
                 oldestFile: oldestFile || undefined,
                 newestFile: newestFile || undefined,
             };
         } catch (error) {
-            console.error("获取日志统计失败:", error);
-            return { totalFiles: 0, totalSize: 0 };
+            if (error.code === 'ENOENT') {
+                return { totalFiles: 0, totalSize: 0 };
+            }
+            throw error;
         }
     }
 } 

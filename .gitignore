@@ -22,3 +22,7 @@ debug-info.txt
 # 请求日志
 **/requests/
 request_*.json
+
+# 响应日志
+**/responses/
+response_*.json

@@ -37,7 +37,10 @@
     "logs:request": "node scripts/view-request-logs.js",
     "logs:request:stats": "node scripts/view-request-logs.js stats",
     "logs:request:recent": "node scripts/view-request-logs.js recent",
-    "logs:request:cleanup": "node scripts/view-request-logs.js cleanup"
+    "logs:request:cleanup": "node scripts/view-request-logs.js cleanup",
+    "logs:request:pair": "node scripts/view-request-logs.js pair",
+    "logs:request:search": "node scripts/view-request-logs.js search",
+    "test:response-logging": "node scripts/test-response-logging.js"
   },
   "license": "Apache-2.0",
   "devDependencies": {

@@ -64,6 +64,7 @@ export class Server {
         this.mcpServer.server.setRequestHandler(CallToolRequestSchema, async (request, extra): Promise<CallToolResult> => {
             // 生成请求ID
             const requestId = new ObjectId().toString();
+            const startTime = Date.now(); // 记录开始时间
             
             // 记录请求信息
             try {
@@ -103,7 +104,55 @@ export class Server {
                 request.params.arguments = {};
             }
 
-            return existingHandler(request, extra);
+            // 执行原始处理器并记录响应
+            try {
+                const response = await existingHandler(request, extra);
+                
+                // 记录成功响应
+                try {
+                    await this.requestLogger.logResponse(requestId, response, undefined, startTime);
+                    
+                    logger.debug(
+                        LogId.toolOutputGenerated, 
+                        "server", 
+                        `响应已记录 ${requestId}: 执行时间 ${Date.now() - startTime}ms`
+                    );
+                } catch (logError) {
+                    logger.error(
+                        LogId.toolExecuteFailure, 
+                        "server", 
+                        `记录响应失败 ${requestId}: ${logError}`
+                    );
+                }
+                
+                return response;
+            } catch (handlerError) {
+                // 记录错误响应
+                try {
+                    const errorInfo = {
+                        code: handlerError.code || 'UNKNOWN_ERROR',
+                        message: handlerError.message || '未知错误',
+                        data: handlerError.data || undefined,
+                    };
+                    
+                    await this.requestLogger.logResponse(requestId, undefined, errorInfo, startTime);
+                    
+                    logger.debug(
+                        LogId.toolExecuteFailure, 
+                        "server", 
+                        `错误响应已记录 ${requestId}: ${errorInfo.message}`
+                    );
+                } catch (logError) {
+                    logger.error(
+                        LogId.toolExecuteFailure, 
+                        "server", 
+                        `记录错误响应失败 ${requestId}: ${logError}`
+                    );
+                }
+                
+                // 重新抛出原始错误
+                throw handlerError;
+            }
         });
 
         await initializeLogger(this.mcpServer, this.userConfig.logPath);
